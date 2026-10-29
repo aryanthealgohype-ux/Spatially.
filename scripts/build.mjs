@@ -1,0 +1,11 @@
+import fs from 'node:fs/promises';
+import {build} from 'esbuild';
+import {writePages} from './pages.mjs';
+await writePages();
+await fs.copyFile('src/site.css','dist/assets/site.css');
+await build({entryPoints:['src/app.js'],bundle:true,format:'esm',outfile:'dist/assets/app.js',minify:true,target:'es2022',legalComments:'eof'});
+const tour=await build({entryPoints:['src/tour.js'],bundle:true,format:'iife',write:false,minify:true,target:'es2022',legalComments:'eof'});
+const glb=await fs.readFile('dist/assets/courtyard-house.glb');
+const css=await fs.readFile('src/site.css','utf8');
+await fs.writeFile('dist/tour.html',`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>The Courtyard Residence — Archivue 3D Tour</title><style>${css}</style></head><body class="standalone-body"><header class="tour-heading"><h1>Archivue. <em>The Courtyard Residence</em></h1><p>INTERACTIVE 3D TOUR · ORBIT + FIXED ROOM VIEWS · ZERO INSTALL REQUIRED</p></header><main class="house-viewer standalone-viewer"></main><script>window.COURTYARD_GLB="${glb.toString('base64')}";</script><script>${tour.outputFiles[0].text.replaceAll('</script','<\\/script')}</script></body></html>`);
+console.log('Built 8 pages, bundled local JS and self-contained tour.html');

@@ -1,0 +1,5 @@
+import fs from 'node:fs/promises';
+import {GLTFExporter} from 'three/addons/exporters/GLTFExporter.js';
+import {createHouse,rooms,walls} from '../model-source/courtyard-house.mjs';
+globalThis.FileReader=class{readAsArrayBuffer(b){b.arrayBuffer().then(x=>{this.result=x;this.onloadend?.();});}readAsDataURL(b){b.arrayBuffer().then(x=>{this.result='data:application/octet-stream;base64,'+Buffer.from(x).toString('base64');this.onloadend?.();});}};
+const house=createHouse();house.updateMatrixWorld(true);const out=await new GLTFExporter().parseAsync(house,{binary:true});await fs.mkdir('dist/assets',{recursive:true});await fs.writeFile('dist/assets/courtyard-house.glb',Buffer.from(out));await fs.writeFile('dist/assets/model-data.json',JSON.stringify({rooms,walls,metadata:house.userData},null,2));let vertices=0,triangles=0,meshes=0;house.traverse(o=>{if(o.isMesh){meshes++;vertices+=o.geometry.attributes.position.count;triangles+=(o.geometry.index?.count||o.geometry.attributes.position.count)/3;}});console.log(JSON.stringify({bytes:out.byteLength,vertices,triangles,meshes}));
